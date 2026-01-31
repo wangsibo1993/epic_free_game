@@ -1,3 +1,6 @@
+.env
+claim.log
+.last_alert
 node_modules/
-data/
-*.env
+claimer/node_modules/
+claimer/data/
