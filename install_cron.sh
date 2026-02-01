@@ -3,9 +3,9 @@
 PROJECT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 CRON_CMD="0 11 * * * $PROJECT_DIR/run_auto.sh >> $PROJECT_DIR/claim.log 2>&1"
 
-# Check if the job already exists
-(crontab -l 2>/dev/null | grep -F "$PROJECT_DIR/run_auto.sh") && echo "Cron job already exists." && exit 0
+# Remove existing job for this script (to allow updating)
+(crontab -l 2>/dev/null | grep -v "$PROJECT_DIR/run_auto.sh") | crontab -
 
-# Add the job
+# Add the new job
 (crontab -l 2>/dev/null; echo "$CRON_CMD") | crontab -
-echo "Cron job added successfully."
+echo "Cron job updated successfully."
