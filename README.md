@@ -74,7 +74,7 @@ TO_EMAIL=your_email@qq.com # 接收通知的邮箱
 
 ## ⏰ 设置每日自动任务
 
-使用 macOS 的 `crontab` 设置每天定时检查（例如每天中午 12:00）。
+使用 macOS 的 `crontab` 设置每天定时检查（例如每天上午 11:00）。
 
 1.  运行项目自带的安装脚本（会自动获取当前路径并写入 crontab）：
 
@@ -91,7 +91,7 @@ crontab -e
 
 添加以下行（请修改为你的实际路径）：
 ```cron
-0 12 * * * /path/to/epic_free_game/run_auto.sh >> /path/to/epic_free_game/claim.log 2>&1
+0 11 * * * /path/to/epic_free_game/run_auto.sh >> /path/to/epic_free_game/claim.log 2>&1
 ```
 
 ---
