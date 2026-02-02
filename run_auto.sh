@@ -6,6 +6,11 @@ CLAIMER_DIR="$SCRIPT_DIR/claimer"
 # Go to the claimer directory
 cd "$CLAIMER_DIR"
 
+# Enable VPN for external access
+# Note: 'vpn' should be replaced with your own proxy/VPN command
+# For users in mainland China, please add your own network proxy setup here
+vpn
+
 echo "[$(date)] Starting auto-claim process..."
 
 # Run in headless mode (default when SHOW is not set)
