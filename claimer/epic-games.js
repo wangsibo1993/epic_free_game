@@ -180,11 +180,22 @@ try {
   }
 
   while (!isLoggedIn) {
-    // If external cookies were loaded but login failed, do not attempt to login again
-    if (externalCookies) {
-       console.error('❌ External cookies loaded but session is invalid/expired.');
-       console.error('Please update claimer/data/cookies.json with fresh cookies from your browser.');
-       process.exit(1);
+    // If external cookies were loaded but login failed, try one more thing: reload the page
+    // Sometimes cookies need a refresh to take effect
+    if (externalCookies && !page.url().includes('redirectUrl')) {
+        console.log('🔄 Session invalid, trying to refresh page once...');
+        await page.reload({ waitUntil: 'networkidle' });
+        // Check login status again
+        const nav = page.locator('egs-navigation');
+        if (await nav.count() > 0 && await nav.getAttribute('isloggedin') == 'true') {
+            isLoggedIn = true;
+            console.log('✅ Login successful after refresh!');
+            break;
+        }
+        
+        console.error('❌ External cookies loaded but session is invalid/expired.');
+        console.error('Please update claimer/data/cookies.json with fresh cookies from your browser.');
+        process.exit(1);
     }
     
     console.error('Not signed in anymore. Please login in the browser or here in the terminal.');
