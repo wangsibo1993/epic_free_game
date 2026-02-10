@@ -147,20 +147,36 @@ try {
   // Check login status
   let isLoggedIn = false;
   try {
-    // Try to detect login status from navigation element
-    // This works on both store page (if redirected) and potentially login page
+    // Wait for the page to settle before checking
+    await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
+    
+    // Try multiple selectors to determine login status
+    // 1. egs-navigation component
     const nav = page.locator('egs-navigation');
     if (await nav.count() > 0) {
-      const isLoggedAttr = await nav.getAttribute('isloggedin', { timeout: 5000 });
-      isLoggedIn = isLoggedAttr == 'true';
-      if (!isLoggedIn) {
-        console.log(`Login check failed: egs-navigation found but isloggedin="${isLoggedAttr}"`);
-      }
-    } else {
-      console.log('Login check failed: egs-navigation element not found');
+       const isLoggedAttr = await nav.getAttribute('isloggedin', { timeout: 5000 });
+       if (isLoggedAttr == 'true') isLoggedIn = true;
     }
+    
+    // 2. Fallback: Look for user profile icon or avatar if egs-navigation fails
+    if (!isLoggedIn) {
+        // "user" icon usually indicates logged in state in new Epic UI
+        const userIcon = page.locator('div[data-testid="user-profile"], .diesel-user-avatar, #user-profile');
+        if (await userIcon.count() > 0) {
+            console.log('Detected login via user profile icon');
+            isLoggedIn = true;
+        }
+    }
+    
+    if (!isLoggedIn) {
+        console.log('Login check failed: egs-navigation not ready or not logged in');
+        // Take a screenshot for debugging
+        await page.screenshot({ path: screenshot('debug-login-failed.png'), fullPage: true });
+        console.log('Saved debug screenshot to debug-login-failed.png');
+    }
+
   } catch (e) {
-    console.log('Could not determine login status, will try to login...');
+    console.log('Could not determine login status, will try to login...', e.message);
   }
 
   while (!isLoggedIn) {
