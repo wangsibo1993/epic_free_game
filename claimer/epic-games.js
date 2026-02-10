@@ -151,7 +151,13 @@ try {
     // This works on both store page (if redirected) and potentially login page
     const nav = page.locator('egs-navigation');
     if (await nav.count() > 0) {
-      isLoggedIn = await nav.getAttribute('isloggedin', { timeout: 5000 }) == 'true';
+      const isLoggedAttr = await nav.getAttribute('isloggedin', { timeout: 5000 });
+      isLoggedIn = isLoggedAttr == 'true';
+      if (!isLoggedIn) {
+        console.log(`Login check failed: egs-navigation found but isloggedin="${isLoggedAttr}"`);
+      }
+    } else {
+      console.log('Login check failed: egs-navigation element not found');
     }
   } catch (e) {
     console.log('Could not determine login status, will try to login...');

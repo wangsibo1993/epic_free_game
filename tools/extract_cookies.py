@@ -29,14 +29,23 @@ def extract_cookies():
             cj = loader(domain_name=domain)
             count = 0
             for c in cj:
+                # Handle SameSite attribute
+                # browser_cookie3 puts extra attributes in _rest
+                same_site = 'Lax' # Default
+                if hasattr(c, '_rest') and 'SameSite' in c._rest:
+                    same_site = c._rest['SameSite']
+                elif c.secure:
+                    # If secure, default to None to allow cross-site usage (common for auth tokens)
+                    same_site = 'None'
+                
                 cookie_dict = {
                     'name': c.name,
                     'value': c.value,
                     'domain': c.domain,
                     'path': c.path,
                     'secure': c.secure,
-                    'httpOnly': 'HttpOnly' in c._rest,
-                    'sameSite': 'Lax' # Default fallback
+                    'httpOnly': 'HttpOnly' in (c._rest if hasattr(c, '_rest') else {}),
+                    'sameSite': same_site
                 }
                 if c.expires:
                     cookie_dict['expires'] = c.expires
