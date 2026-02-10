@@ -23,16 +23,28 @@ const db = await jsonDb('epic-games.json', {});
 
 // Try to load cookies from external file (exported from real browser)
 let externalCookies = null;
-const externalCookiesPath = resolve(cfg.dir.browser, '../cookies.json');
-if (existsSync(externalCookiesPath)) {
-  try {
-    const cookiesContent = await import('fs').then(fs => fs.promises.readFile(externalCookiesPath, 'utf8'));
-    externalCookies = JSON.parse(cookiesContent);
-    console.log(`✅ Loaded ${externalCookies.length} cookies from external file (real browser session)`);
-  } catch (e) {
-    console.warn('⚠️  Failed to load external cookies:', e.message);
+// Check multiple locations for cookies.json:
+// 1. claimer/data/cookies.json (standard data dir)
+// 2. ../cookies.json (relative to browser dir, legacy)
+const cookiePaths = [
+  resolve(cfg.dir.browser, '../cookies.json'),
+  path.resolve(process.cwd(), 'data', 'cookies.json'),
+  path.resolve(process.cwd(), 'cookies.json')
+];
+
+for (const p of cookiePaths) {
+  if (p && existsSync(p)) {
+     try {
+       const cookiesContent = await import('fs').then(fs => fs.promises.readFile(p, 'utf8'));
+       externalCookies = JSON.parse(cookiesContent);
+       console.log(`✅ Loaded ${externalCookies.length} cookies from: ${p}`);
+       break; 
+     } catch (e) {
+       console.warn(`⚠️  Found cookies file at ${p} but failed to load:`, e.message);
+     }
   }
 }
+
 
 if (cfg.time) console.time('startup');
 
@@ -146,6 +158,13 @@ try {
   }
 
   while (!isLoggedIn) {
+    // If external cookies were loaded but login failed, do not attempt to login again
+    if (externalCookies) {
+       console.error('❌ External cookies loaded but session is invalid/expired.');
+       console.error('Please update claimer/data/cookies.json with fresh cookies from your browser.');
+       process.exit(1);
+    }
+    
     console.error('Not signed in anymore. Please login in the browser or here in the terminal.');
     if (cfg.novnc_port) console.info(`Open http://localhost:${cfg.novnc_port} to login inside the docker container.`);
     if (!cfg.debug) context.setDefaultTimeout(cfg.login_timeout); // give user some extra time to log in
