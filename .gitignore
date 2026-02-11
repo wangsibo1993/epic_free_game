@@ -1,6 +1,39 @@
+# Environment variables (contains email credentials)
 .env
+
+# Log files
 claim.log
+*.log
+notifier/*.log
+
+# Alert tracking
 .last_alert
+
+# Node modules
 node_modules/
 claimer/node_modules/
+
+# User data (contains cookies, browser data, game records)
 claimer/data/
+notifier/notified_games.json
+notifier/owned_games.json
+
+# Backup files
+*_backup/
+*_backup_*/
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+env/

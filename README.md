@@ -1,146 +1,208 @@
-# 🎮 Epic Games 自动免费游戏领取助手
+# 🎮 Epic Games Free Game Auto Notifier
 
-这是一个全自动的 Epic Games Store 免费游戏领取工具。它基于 [vogler/free-games-claimer](https://github.com/vogler/free-games-claimer) 进行封装和优化，增加了**邮件通知**功能，并优化了**登录体验**。
+自动检测 Epic Games 免费游戏并发送邮件通知，支持 API 检查游戏所有权，避免重复通知已领取的游戏。
 
-核心功能：
-- ✅ **全自动领取**：每天自动检查并领取本周免费游戏。
-- 📧 **智能邮件通知**：只有成功领取新游戏或发生错误时才会发邮件，避免垃圾邮件打扰。
-- 🛡️ **抗检测优化**：使用定制的 Chromium 内核和伪装参数，降低被识别为机器人的概率。
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 
----
+## ✨ 核心特性
+
+- 🎮 **自动检测免费游戏** - 每天定时检测 Epic Games 最新免费游戏
+- 📧 **邮件通知** - 发现新游戏后自动发送邮件通知（HTML格式，包含游戏链接）
+- ✅ **智能所有权检查** - 通过 Epic Games API 检查游戏库，已拥有的游戏不再通知
+- 🔐 **Cookie 自动管理** - 自动提取和解密浏览器 Cookie（支持 Chrome/Edge/Brave）
+- 🚫 **双重去重机制** - API检查 + 本地记录，确保不重复通知
+- ⏰ **Cron 定时任务** - 每天自动运行，无需手动干预
+- 📝 **完整日志记录** - 详细的运行日志，方便调试和追踪
+
+## 📋 系统要求
+
+- Python 3.9+
+- macOS/Linux（Windows 需修改路径）
+- Chrome/Edge/Brave 浏览器（用于提取 Cookie）
+- Epic Games 账号
 
 ## 🚀 快速开始
 
-### 1. 环境准备
-确保你的 macOS 已安装 Node.js 和 Git。
+### 1. 克隆项目
 
 ```bash
-git clone git@github.com:wangsibo1993/epic_free_game.git
+git clone https://github.com/YOUR_USERNAME/epic_free_game.git
 cd epic_free_game
-npm install
 ```
 
-### 2. 🌐 网络访问配置 (重要提醒)
-
-> ⚠️ **重要：适用于中国大陆用户**
->
-> Epic Games Store 在中国大陆地区可能无法直接访问，如果遇到网络连接问题，请：
->
-> 1. **自行配置科学上网工具**（如 Clash、Surge、V2Ray 等）
-> 2. **修改 `run_auto.sh` 脚本**中的 `vpn` 命令，替换为您的代理启用命令
->    ```bash
->    # 在 run_auto.sh 中找到以下行：
->    vpn
->
->    # 替换为您的实际命令，例如：
->    # export https_proxy=http://127.0.0.1:7890
->    # export http_proxy=http://127.0.0.1:7890
->    # 或其他适合您环境的代理设置
->    ```
-> 3. **测试网络连通性**：
->    ```bash
->    curl -I https://store.epicgames.com/en-US/free-games
->    ```
->    如果返回 200 状态码，说明网络配置正确。
-
-### 3. 首次登录 (关键步骤)
-
-在能够自动运行之前，必须先手动运行一次以保存登录凭证 (Cookies)。
-
-**💡 强烈建议：**
-由于 Epic Games 的网页登录验证非常严格（尤其是直接使用账号密码时容易出现 Captcha 错误），**强烈建议使用第三方账号（如 Steam、Google、Apple）进行关联登录**。
-> **经验证，使用 Steam 账号关联登录是最稳定、最不容易报错的方式。**
-
-运行登录脚本：
+### 2. 安装 Python 依赖
 
 ```bash
-./setup_login.sh
+pip3 install requests python-dotenv browser-cookie3 pycryptodome
 ```
 
-**操作指南：**
-1.  脚本会弹出一个 Chromium 浏览器窗口。
-2.  在登录页面，点击底部的图标选择 **"Sign in with Steam"** (或其他第三方方式)。
-3.  登录成功后，脚本会自动跳转并检测当周免费游戏。
-4.  看到终端提示 `Signed in as ...` 并且浏览器开始自动跳转页面时，说明登录凭证已保存成功。
-5.  如果脚本自动开始领取游戏，你可以等待它完成；如果已保存凭证，直接关闭窗口即可。
+### 3. 配置邮箱
 
-### 4. 配置邮件通知
-
-复制配置文件模版：
+复制环境变量模板并编辑：
 
 ```bash
 cp .env.example .env
+nano .env
 ```
 
-编辑 `.env` 文件，填入你的邮箱配置（推荐使用 QQ 邮箱）：
+填写以下配置：
 
 ```ini
-# QQ邮箱 SMTP 配置示例
+# SMTP 邮件配置
 SMTP_HOST=smtp.qq.com
 SMTP_PORT=465
-SMTP_USER=your_email@qq.com
-SMTP_PASS=your_auth_code  # 在QQ邮箱设置中获取的授权码
-TO_EMAIL=your_email@qq.com # 接收通知的邮箱
+SMTP_USER=your_email@qq.com      # 你的QQ邮箱
+SMTP_PASS=your_auth_code          # QQ邮箱授权码（不是密码！）
+TO_EMAIL=recipient@example.com    # 接收通知的邮箱
 ```
 
-### 5. 测试自动运行
+**获取 QQ 邮箱授权码：**
+1. 登录 [QQ 邮箱网页版](https://mail.qq.com)
+2. 设置 → 账户 → POP3/IMAP/SMTP 服务
+3. 开启 SMTP 服务并生成授权码
 
-配置完成后，运行以下命令测试无头模式（后台静默运行）：
+### 4. 提取 Cookie（可选但推荐）
+
+在 Chrome 中登录 Epic Games 账号，然后运行：
 
 ```bash
-./run_auto.sh
+cd notifier
+python3 cookie_manager.py refresh
 ```
 
-如果看到 `Auto-claim finished successfully` 的日志，且没有报错，说明一切正常。
+这步是可选的，但强烈推荐：
+- ✅ **有 Cookie**：可以检查游戏所有权，已拥有的游戏不会通知
+- ⚠️ **无 Cookie**：仍可检测免费游戏并通知，但无法过滤已拥有的
+
+### 5. 测试运行
+
+```bash
+cd notifier
+python3 notify_free_games.py
+```
+
+成功后你会收到邮件通知！
+
+### 6. 安装定时任务
+
+每天11点自动检测：
+
+```bash
+cd notifier
+bash install_notifier_cron.sh
+```
+
+查看定时任务：
+```bash
+crontab -l
+```
+
+## 📁 项目结构
+
+```
+epic_free_game/
+├── claimer/                    # 浏览器自动化（旧版，已暂停）
+│   └── epic-games.js          # Puppeteer 自动领取脚本
+│
+├── notifier/                   # ⭐ API 通知系统（推荐使用）
+│   ├── notify_free_games.py   # 🎯 主通知脚本（带所有权检查）
+│   ├── epic_auto_claimer.py   # API 自动领取（实验性）
+│   ├── cookie_manager.py      # Cookie 提取与管理
+│   ├── mark_owned.py          # 手动标记已拥有游戏
+│   ├── run_notifier.sh        # Cron 包装脚本
+│   ├── install_notifier_cron.sh # 定时任务安装脚本
+│   └── README.md              # 详细文档
+│
+├── .env.example               # 环境变量模板
+├── .gitignore                 # Git 忽略文件
+└── README.md                  # 本文件
+```
+
+## 🔧 工作原理
+
+### 1. 免费游戏检测
+
+调用 Epic Games Store API 获取免费游戏列表。
+
+### 2. 所有权检查（核心创新🌟）
+
+使用 Epic Games Entitlement API 检查用户游戏库：
+
+```
+GET https://entitlement-public-service-prod08.ol.epicgames.com/entitlement/api/account/{account_id}/entitlements
+```
+
+**工作流程：**
+1. 从 `EPIC_EG1` token (JWT) 中提取 `account_id`
+2. 调用 Entitlements API 获取用户所有权限
+3. 提取所有拥有的游戏 `namespace`
+4. 将免费游戏的 `namespace` 与已拥有的对比
+5. 匹配成功 = 已拥有，不发送通知
+
+**优势：**
+- ✅ **100% 准确** - 直接查询官方 API
+- ✅ **实时更新** - 反映最新的游戏库状态  
+- ✅ **支持所有类型** - BASE_GAME、ADD_ON、DLC 等
+
+### 3. 双重去重
+
+1. **API 检查** - 过滤已拥有的游戏
+2. **本地记录** - 过滤已通知过的游戏
+
+## 📚 使用指南
+
+详见 [notifier/README.md](notifier/README.md)
+
+## 🐛 故障排除
+
+### 邮件发送失败
+
+1. 检查 `.env` 配置
+2. 确认使用**授权码**而非密码
+3. 检查 SMTP 端口
+
+### Cookie 提取失败
+
+1. 在 Chrome 中登录 Epic Games
+2. 完全关闭浏览器
+3. 重新运行: `python3 cookie_manager.py refresh`
+
+### API 认证失败
+
+Cookie 已过期，重新提取：
+```bash
+python3 cookie_manager.py refresh
+```
+
+## 🔐 安全与隐私
+
+- ✅ 敏感信息仅本地存储
+- ✅ 只调用只读 API
+- ✅ 开源透明，可审计
+- ✅ 无第三方数据上传
+
+## 📝 更新日志
+
+### 2026-02-11
+- ✅ 实现 Epic Games Entitlements API 集成
+- ✅ 修复 Cookie 提取和解密
+- ✅ 修复 URL 404 问题
+- ✅ 添加价格过滤
+- ✅ 优化所有权检查逻辑
+
+## 📄 许可证
+
+MIT License
+
+## 🙏 致谢
+
+- [vogler/free-games-claimer](https://github.com/vogler/free-games-claimer)
+- Epic Games Store API
+- browser-cookie3 项目
 
 ---
 
-## ⏰ 设置每日自动任务
+**⚠️ 免责声明**: 本项目仅供学习交流使用。请遵守 Epic Games 服务条款。
 
-使用 macOS 的 `crontab` 设置每天定时检查（例如每天上午 11:00）。
-
-1.  运行项目自带的安装脚本（会自动获取当前路径并写入 crontab）：
-
-```bash
-chmod +x install_cron.sh
-./install_cron.sh
-```
-
-2.  或者手动添加：
-
-```bash
-crontab -e
-```
-
-添加以下行（请修改为你的实际路径）：
-```cron
-0 11 * * * /path/to/epic_free_game/run_auto.sh >> /path/to/epic_free_game/claim.log 2>&1
-```
-
----
-
-## 🔍 常见问题
-
-**Q: 登录时一直提示 "Incorrect response" 怎么办？**
-A: 这是 Epic 的反爬虫拦截。
-1. 请确保使用了 `./setup_login.sh` 启动浏览器。
-2. **不要**直接输入 Epic 账号密码。
-3. **改用 Steam / Google 等第三方账号登录**，通常能直接绕过此错误。
-4. 如果依然不行，尝试在弹出的浏览器中按 `Cmd+R` 刷新页面，或等待几小时后再试。
-
-**Q: 邮件通知没有收到？**
-A: 
-1. 检查 `.env` 中的 `SMTP_PASS` 是否正确（是授权码，不是邮箱密码）。
-2. 只有在 **"成功领取了新游戏"** 或者 **"脚本运行出错"** 时才会发邮件。如果游戏已经领过了，脚本会静默退出，不发送邮件。
-
-**Q: 出现 "net::ERR_CONNECTION_CLOSED" 或 "Timeout" 错误怎么办？**
-A: 这通常是网络连接问题：
-1. **中国大陆用户**：请确保已配置科学上网工具，并在 `run_auto.sh` 中正确设置代理
-2. **测试连接**：运行 `curl -I https://store.epicgames.com/en-US/free-games` 检查网络
-3. **增加超时时间**：在 `.env` 文件中添加 `TIMEOUT=180`
-
-**Q: 如何查看运行日志？**
-A: 日志保存在项目目录下的 `claim.log` 文件中：
-```bash
-tail -f claim.log
-```
+**🌟 如果这个项目对你有帮助，请给一个 Star！**
