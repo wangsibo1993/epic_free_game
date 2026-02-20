@@ -112,28 +112,19 @@ try {
   // This is more natural than visiting the store first without auth
   console.log('Checking if already logged in...');
 
-  // User suggested always starting from the login URL to avoid anti-crawler issues
-  // If we have cookies, this will redirect to the claim page automatically
-  console.log('Visiting login page to ensure valid session...');
-  await randomSleep(2000, 4000);
-  await page.goto(URL_LOGIN, { waitUntil: 'load', timeout: 60000 });
-  await randomSleep(3000, 5000);
-
-  /*
-  // First check if we have existing cookies (from previous successful login)
-  const cookies = await context.cookies();
-  const hasAuthCookies = cookies.some(c => c.name.includes('EPIC') || c.name.includes('eg-auth'));
-
-  if (hasAuthCookies) {
-    console.log('Found existing auth cookies, visiting store page...');
-    // Add random delay before first page load
-    await randomSleep(2000, 4000);
-    // Use 'load' instead of 'domcontentloaded' to wait for all resources including Cloudflare scripts
-    await page.goto(URL_CLAIM, { waitUntil: 'load', timeout: 60000 });
-    // Wait after initial page load - longer delay to let Cloudflare scripts execute
-    await randomSleep(3000, 5000);
+  if (externalCookies) {
+      console.log('⚡️ External cookies loaded. Skipping login page and navigating directly to Store...');
+      // Direct navigation to claim page to test session
+      await page.goto(URL_CLAIM, { waitUntil: 'domcontentloaded', timeout: 60000 });
+      await randomSleep(3000, 5000);
+  } else {
+      // User suggested always starting from the login URL to avoid anti-crawler issues
+      // If we have cookies, this will redirect to the claim page automatically
+      console.log('Visiting login page to ensure valid session...');
+      await randomSleep(2000, 4000);
+      await page.goto(URL_LOGIN, { waitUntil: 'load', timeout: 60000 });
+      await randomSleep(3000, 5000);
   }
-  */
 
   // Now set cookies AFTER visiting the page naturally
   await context.addCookies([
